@@ -12,11 +12,14 @@ console.log('log at start, parent process');
 const bin = path.join(__dirname, '../index.js');
 // fork(bin, [], { execArgv: [ '--inspect=9999' ] });
 
+const debugPort = 9999;
+
+// hack to make cfork start with debugPort
+process.debugPort = debugPort - 1;
 
 cfork({
   exec: bin,
-  args: [],
-  execArgv: [ '--inspect=9999' ],
+  execArgv: [ '--inspect' ],
   silent: false,
   count: 1,
   refork: true,
