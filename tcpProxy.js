@@ -1,6 +1,7 @@
 const net = require('net');
 const stream = require('stream');
 const dns = require('dns');
+const through = require('through2');
 const EventEmitter = require('events').EventEmitter;
 
 module.exports = class TCPProxy extends EventEmitter {
@@ -9,54 +10,68 @@ module.exports = class TCPProxy extends EventEmitter {
     this.port = options.port;
   }
 
-  start({ forwardPort, forwardHost }) {
+  start({ forwardPort, forwardHost, clientThrough, serverThrough }) {
     if (this.server) {
       return this.stop().then(() => {
-        return this.start({ forwardPort, forwardHost });
+        return this.start.apply(this, [].slice.call(arguments));
       });
     }
+
+    const onClose = () => {
+      this.proxyClient.destroy();
+      this.proxyServer.destroy();
+    };
+
+    const onError = err => {
+      this.emit('error', err);
+      onClose();
+    };
 
     return new Promise((resolve, reject) => {
       this.server = net
         .createServer(client => {
-          const serverStream = new stream.PassThrough();
-          const clientStream = new stream.PassThrough();
-          const server = net.connect({
-            port: forwardPort,
-            host: forwardHost,
-          }, () => {
-            if (server.writable && server.readable) {
-              client.pipe(server).pipe(client);
-              client.pipe(clientStream);
-              server.pipe(serverStream);
-            } else {
-              server.destroy();
+          const server = net.connect(
+            {
+              port: forwardPort,
+              host: forwardHost,
+            },
+            () => {
+              if (server.writable && server.readable) {
+                let _client = client;
+                let _server = server;
+
+                if (clientThrough) {
+                  _client = _client.pipe(through.obj(clientThrough));
+                }
+
+                if (serverThrough) {
+                  _server = _server.pipe(through.obj(serverThrough));
+                }
+
+                _client.pipe(server);
+                _server.pipe(client);
+              } else {
+                server.destroy();
+              }
             }
-          });
+          );
 
           this.client = client;
           this.proxyClient = client;
           this.proxyServer = server;
 
-          const onClose = () => {
-            server.destroy();
-            client.destroy();
-            clientStream.end();
-            serverStream.end();
-          };
-
-          const onError = err => {
-            this.emit('error', err);
-            onClose();
-          };
-
           server.on('close', onClose);
           server.on('error', onError);
           client.on('close', onClose);
           client.on('error', onError);
-          this.emit('connection', clientStream, serverStream);
+          this.emit('connection');
         })
         .listen(this.port);
+
+      this.server.on('close', () => {
+        this.server = null;
+        onClose();
+      });
 
       this.server.on('error', reject);
       this.server.on('listening', () => {
@@ -68,14 +83,7 @@ module.exports = class TCPProxy extends EventEmitter {
 
   stop() {
     return new Promise(resolve => {
-      this.proxyClient.destroy();
-      this.proxyServer.destroy();
-      this.server.close(() => {
-        this.server = null;
-        this.proxyClient = null;
-        this.proxyServer = null;
-        resolve();
-      });
+      this.server.close(resolve);
     });
   }
 };
