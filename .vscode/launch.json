@@ -13,6 +13,7 @@
         "run-script",
         "debug"
       ],
+      // "console": "integratedTerminal",
       "port": 9229
     }
   ]

@@ -8,6 +8,6 @@
     "node": ">=6.0.0"
   },
   "scripts": {
-    "debug": "node bin/my-bin.js"
+    "debug": "echo some_log ; node bin/my-bin.js"
   }
 }
