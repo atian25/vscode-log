@@ -19,18 +19,23 @@ module.exports = class TCPProxy extends EventEmitter {
     return new Promise((res, rej) => {
       this.server = net
         .createServer(client => {
+          const serverStream = new stream.PassThrough();
+          const clientStream = new stream.PassThrough();
           const server = net.connect({
             port: forwardPort,
             host: forwardHost,
+          }, () => {
+            if (server.writable || server.readable) {
+              client.pipe(server).pipe(client);
+              client.pipe(clientStream);
+              server.pipe(serverStream);
+            } else {
+              server.destroy();
+            }
           });
 
           this.client = client;
           this.proxyServer = server;
-          const serverStream = new stream.PassThrough();
-          const clientStream = new stream.PassThrough();
-          client.pipe(server).pipe(client);
-          client.pipe(clientStream);
-          server.pipe(serverStream);
 
           const onClose = () => {
             server.destroy();
