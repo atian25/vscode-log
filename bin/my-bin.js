@@ -4,6 +4,7 @@
 
 const path = require('path');
 const fork = require('child_process').fork;
+const exec = require('child_process').exec;
 const proxy = require('../proxy');
 const cfork = require('cfork');
 
@@ -25,4 +26,7 @@ cfork({
   refork: true,
 });
 
-proxy();
+// kill debug port
+exec(`kill -9 $(lsof -i :${debugPort} | grep -E  -o '\\s\\d+\\s')`, () => {
+  proxy(debugPort);  
+});

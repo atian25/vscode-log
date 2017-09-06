@@ -1,18 +1,9 @@
-const tcpSpy = require('tcp-spy');
+const TCPProxy = require('./tcpProxy');
+const proxy = new TCPProxy({ port: 9229 });
 
-module.exports = () => {
-  console.log('start proxy');
-  const spy = tcpSpy({
-    port: 9229,
+module.exports = port => {
+  proxy.start({
     forwardHost: 'localhost', // optional, defaults to localhost
-    forwardPort: 9999
+    forwardPort: port,
   });
-
-  // spy.on('connection', function (client, server) {
-    // client.pipe(server);
-    // client.pipe(process.stdout);
-    // server.pipe(process.stdout);
-  // });
-
-  return spy;
-}
+};
