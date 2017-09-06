@@ -24,7 +24,7 @@ module.exports = port => {
     forwardPort,
     clientThrough: function(chunk, enc, done) {
       let content = chunk.toString();
-      if (wsId && content.includes('GET')) {
+      if (wsId && content.startsWith('GET')) {
         // 替换 websocket id
         content = content.replace(
           /(^GET \/)[\w-]{36}( HTTP)/,
