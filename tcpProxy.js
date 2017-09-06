@@ -72,6 +72,8 @@ module.exports = class TCPProxy extends EventEmitter {
       this.proxyServer.destroy();
       this.server.close(() => {
         this.server = null;
+        this.proxyClient = null;
+        this.proxyServer = null;
         resolve();
       });
     });
