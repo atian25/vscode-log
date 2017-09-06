@@ -12,7 +12,7 @@ module.exports = class TCPProxy extends EventEmitter {
   start({ forwardPort, forwardHost }) {
     if (this.server) {
       return this.stop().then(() => {
-        this.start({ forwardPort, forwardHost });
+        return this.start({ forwardPort, forwardHost });
       });
     }
 
