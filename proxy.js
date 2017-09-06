@@ -10,4 +10,6 @@ module.exports = port => {
   proxy.on('connection', () => {
     console.log('connect!!');
   });
+
+  return proxy;
 };

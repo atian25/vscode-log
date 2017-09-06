@@ -26,15 +26,7 @@ cfork({
   refork: true,
 }).on('exit', () => {
   debugPort++;
-  console.log(debugPort);
-  startProxy(debugPort, debugPort - 1);
+  proxy(debugPort);
 });
 
-// kill debug port
-startProxy(debugPort);
-
-function startProxy(port, oldPort = port) {
-  exec(`kill -9 $(lsof -i :${oldPort} | grep -E  -o '\\s\\d+\\s')`, () => {
-    proxy(port);
-  });
-}
+proxy(debugPort);

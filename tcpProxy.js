@@ -35,6 +35,7 @@ module.exports = class TCPProxy extends EventEmitter {
           });
 
           this.client = client;
+          this.proxyClient = client;
           this.proxyServer = server;
 
           const onClose = () => {
@@ -67,6 +68,7 @@ module.exports = class TCPProxy extends EventEmitter {
 
   stop() {
     return new Promise(resolve => {
+      this.proxyClient.destroy();
       this.proxyServer.destroy();
       this.server.close(() => {
         this.server = null;
