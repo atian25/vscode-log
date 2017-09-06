@@ -25,7 +25,7 @@ module.exports = class TCPProxy extends EventEmitter {
             port: forwardPort,
             host: forwardHost,
           }, () => {
-            if (server.writable || server.readable) {
+            if (server.writable && server.readable) {
               client.pipe(server).pipe(client);
               client.pipe(clientStream);
               server.pipe(serverStream);
