@@ -13,20 +13,28 @@ console.log('log at start, parent process');
 const bin = path.join(__dirname, '../index.js');
 // fork(bin, [], { execArgv: [ '--inspect=9999' ] });
 
-const debugPort = 9999;
+let debugPort = 9999;
 
 // hack to make cfork start with debugPort
 process.debugPort = debugPort - 1;
 
 cfork({
   exec: bin,
-  execArgv: [ '--inspect' ],
+  execArgv: ['--inspect'],
   silent: false,
   count: 1,
   refork: true,
+}).on('exit', () => {
+  debugPort++;
+  console.log(debugPort);
+  startProxy(debugPort, debugPort - 1);
 });
 
 // kill debug port
-exec(`kill -9 $(lsof -i :${debugPort} | grep -E  -o '\\s\\d+\\s')`, () => {
-  proxy(debugPort);  
-});
+startProxy(debugPort);
+
+function startProxy(port, oldPort = port) {
+  exec(`kill -9 $(lsof -i :${oldPort} | grep -E  -o '\\s\\d+\\s')`, () => {
+    proxy(port);
+  });
+}

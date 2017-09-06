@@ -6,4 +6,8 @@ module.exports = port => {
     forwardHost: 'localhost', // optional, defaults to localhost
     forwardPort: port,
   });
+
+  proxy.on('connection', () => {
+    console.log('connect!!');
+  });
 };

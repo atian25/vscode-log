@@ -16,7 +16,7 @@ module.exports = class TCPProxy extends EventEmitter {
       });
     }
 
-    return new Promise((res, rej) => {
+    return new Promise((resolve, reject) => {
       this.server = net
         .createServer(client => {
           const serverStream = new stream.PassThrough();
@@ -57,20 +57,20 @@ module.exports = class TCPProxy extends EventEmitter {
         })
         .listen(this.port);
 
-      this.server.on('error', rej);
+      this.server.on('error', reject);
       this.server.on('listening', () => {
-        this.server.removeListener('error', rej);
-        res();
+        this.server.removeListener('error', reject);
+        resolve();
       });
     });
   }
 
   stop() {
-    return new Promise(res => {
+    return new Promise(resolve => {
       this.proxyServer.destroy();
       this.server.close(() => {
         this.server = null;
-        res();
+        resolve();
       });
     });
   }
