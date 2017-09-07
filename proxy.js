@@ -1,6 +1,5 @@
-const TCPProxy = require('./tcpProxy');
+const TCPProxy = require('tcp-proxy.js');
 const http = require('http');
-const co = require('co');
 const exec = require('child_process').exec;
 const opn = require('opn');
 const proxyPort = 9229;
@@ -33,7 +32,7 @@ module.exports = port => {
   }, 1000);
 
   // start proxy
-  proxy.start({
+  proxy.createProxy({
     forwardHost, // optional, defaults to localhost
     forwardPort,
     interceptor: {
