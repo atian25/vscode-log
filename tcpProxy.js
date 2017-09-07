@@ -10,16 +10,17 @@ module.exports = class TCPProxy extends EventEmitter {
     this.port = options.port;
   }
 
-  start({ forwardPort, forwardHost, clientThrough, serverThrough }) {
+  start({ forwardPort, forwardHost, interceptor }) {
     if (this.server) {
-      return this.stop().then(() => {
-        return this.start.apply(this, [].slice.call(arguments));
+      const args = [].slice.call(arguments);
+      return this.end().then(() => {
+        return this.start.apply(this, args);
       });
     }
 
     const onClose = () => {
-      this.proxyClient.destroy();
-      this.proxyServer.destroy();
+      this.proxyClient && this.proxyClient.destroy();
+      this.proxyServer && this.proxyServer.destroy();
     };
 
     const onError = err => {
@@ -36,27 +37,36 @@ module.exports = class TCPProxy extends EventEmitter {
               host: forwardHost,
             },
             () => {
-              if (server.writable && server.readable) {
-                let _client = client;
-                let _server = server;
-
-                if (clientThrough) {
-                  _client = _client.pipe(through.obj(clientThrough));
-                }
-
-                if (serverThrough) {
-                  _server = _server.pipe(through.obj(serverThrough));
-                }
-
-                _client.pipe(server);
-                _server.pipe(client);
-              } else {
-                server.destroy();
+              if (!server.writable || !server.readable) {
+                return server.destroy();
               }
+
+              let _client = client;
+              let _server = server;
+
+              // client interceptor
+              if (interceptor.client) {
+                _client = _client.pipe(
+                  through.obj(function(chunk, enc, done) {
+                    done(null, interceptor.client(chunk, enc) || chunk);
+                  })
+                );
+              }
+
+              // server interceptor
+              if (interceptor.server) {
+                _server = _server.pipe(
+                  through.obj(function(chunk, enc, done) {
+                    done(null, interceptor.server(chunk, enc) || chunk);
+                  })
+                );
+              }
+
+              _client.pipe(server);
+              _server.pipe(client);
             }
           );
 
-          this.client = client;
           this.proxyClient = client;
           this.proxyServer = server;
 
@@ -68,20 +78,20 @@ module.exports = class TCPProxy extends EventEmitter {
         })
         .listen(this.port);
 
-      this.server.on('close', () => {
+      this.server.once('close', () => {
         this.server = null;
         onClose();
       });
 
-      this.server.on('error', reject);
-      this.server.on('listening', () => {
+      this.server.once('error', reject);
+      this.server.once('listening', () => {
         this.server.removeListener('error', reject);
         resolve();
       });
     });
   }
 
-  stop() {
+  end() {
     return new Promise(resolve => {
       this.server.close(resolve);
     });

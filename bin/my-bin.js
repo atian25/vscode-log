@@ -18,6 +18,13 @@ let debugPort = 9999;
 // hack to make cfork start with debugPort
 process.debugPort = debugPort - 1;
 
+// prevent cfork print epipe error
+process.on('uncaughtException', err => {
+  if (err.code !== 'EPIPE') {
+    console.error(err);
+  }
+});
+
 cfork({
   exec: bin,
   execArgv: ['--inspect'],

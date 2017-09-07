@@ -4,6 +4,7 @@
   "description": "",
   "dependencies": {
     "cfork": "^1.6.1",
+    "opn": "^5.1.0",
     "tcp-spy": "^1.0.0",
     "through2": "^2.0.3"
   },
