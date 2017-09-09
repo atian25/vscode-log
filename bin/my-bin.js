@@ -31,7 +31,8 @@ cfork({
     .find(arg => arg.startsWith('--inspect'))
     .match(/\d+/)[0];
 
-  proxy(9229, port).then(({ url }) => {
-    console.log(`\nproxy url: ${url}`);
-  });
+  proxy({ proxyPort: 9229, debugPort: port })
+    .then(({ url }) => {
+      console.log(`\nproxy url: ${url}`);
+    });
 });

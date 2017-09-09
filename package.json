@@ -4,7 +4,7 @@
   "description": "",
   "dependencies": {
     "cfork": "^1.6.1",
-    "inspector-proxy": "^0.1.0",
+    "inspector-proxy": "^0.2.0",
     "opn": "^5.1.0",
     "tcp-proxy.js": "^1.0.0"
   },
@@ -12,6 +12,6 @@
     "node": ">=6.0.0"
   },
   "scripts": {
-    "start": "node bin/my-bin.js"
+    "start": "inspector-proxy index.js"
   }
 }
